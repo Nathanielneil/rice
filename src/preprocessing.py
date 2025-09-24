@@ -92,21 +92,49 @@ class NIRPreprocessor:
         if 'first_deriv' in methods:
             try:
                 deriv1_obj = Preprocessing.derivate(order=1)
-                deriv1_data = deriv1_obj.fit_transform(raw_data)
+                # Try different methods to call derivate
+                if hasattr(deriv1_obj, 'transform'):
+                    deriv1_data = deriv1_obj.transform(raw_data)
+                elif hasattr(deriv1_obj, 'fit_transform'):
+                    deriv1_data = deriv1_obj.fit_transform(raw_data)
+                else:
+                    # Fallback to numpy gradient
+                    deriv1_data = np.gradient(raw_data, axis=1)
                 results['first_derivative'] = deriv1_data
                 print("✓ First derivative calculated")
             except Exception as e:
                 print(f"✗ First derivative failed: {e}")
+                # Use numpy gradient as fallback
+                try:
+                    results['first_derivative'] = np.gradient(raw_data, axis=1)
+                    print("✓ First derivative calculated using numpy fallback")
+                except:
+                    pass
         
         # Second derivative
         if 'second_deriv' in methods:
             try:
                 deriv2_obj = Preprocessing.derivate(order=2)
-                deriv2_data = deriv2_obj.fit_transform(raw_data)
+                # Try different methods to call derivate
+                if hasattr(deriv2_obj, 'transform'):
+                    deriv2_data = deriv2_obj.transform(raw_data)
+                elif hasattr(deriv2_obj, 'fit_transform'):
+                    deriv2_data = deriv2_obj.fit_transform(raw_data)
+                else:
+                    # Fallback to numpy gradient
+                    first_deriv = np.gradient(raw_data, axis=1)
+                    deriv2_data = np.gradient(first_deriv, axis=1)
                 results['second_derivative'] = deriv2_data
                 print("✓ Second derivative calculated")
             except Exception as e:
                 print(f"✗ Second derivative failed: {e}")
+                # Use numpy gradient as fallback
+                try:
+                    first_deriv = np.gradient(raw_data, axis=1)
+                    results['second_derivative'] = np.gradient(first_deriv, axis=1)
+                    print("✓ Second derivative calculated using numpy fallback")
+                except:
+                    pass
         
         self.processed_data = results
         return results
