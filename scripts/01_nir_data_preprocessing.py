@@ -115,7 +115,14 @@ class NIRPreprocessor:
         """
         try:
             deriv_obj = Preprocessing.derivate(order=order)
-            deriv_spectra = deriv_obj.fit_transform(spectra)
+            # PyNIR的derivate可能使用transform而不是fit_transform
+            if hasattr(deriv_obj, 'transform'):
+                deriv_spectra = deriv_obj.transform(spectra)
+            elif hasattr(deriv_obj, 'fit_transform'):
+                deriv_spectra = deriv_obj.fit_transform(spectra)
+            else:
+                # 如果都没有，使用自定义方法
+                raise AttributeError("No transform method found")
             return deriv_spectra
         except Exception as e:
             print(f"PyNIR导数计算失败，使用自定义方法: {e}")
